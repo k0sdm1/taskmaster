@@ -9,9 +9,9 @@
     <style>
         :root {
             --bg-color: #f8fafc;
-            --column-bg: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
+            --column-bg: var(--column-bg);
+            --card-bg: var(--card-bg);
+            --text-main: var(--text);
             --text-muted: #64748b;
             --primary: #3b82f6;
             --primary-hover: #2563eb;
@@ -192,7 +192,13 @@
 
             {% for task in context.tasks %}
                 {% if col_id == task.status %}
-                    <div class="task-card" draggable="true" ondragstart="drag(event)" id="card{{ task.id }}" onclick="openTaskDetail('{{ task.code }}')">
+                    <div
+                    class="task-card" draggable="true"
+                    ondragstart="drag(event)"
+                    id="card{{ task.id }}"
+                    onclick="openTaskDetail('{{ task.code }}')"
+                    data-task-code="{{ task.code }}"
+                    >
                         <div class="task-code">{{ task.code }}</div>
                         <div class="task-name">{{ task.name }}</div>
                     </div>                    
@@ -320,8 +326,21 @@
         dropCardToList(draggedElement, target);
     }
 
-    function dropCardToList(card, list) {
-        alert(list.dataset.taskListCode);
+    async function dropCardToList(card, list) {
+        // alert(list.dataset.taskListCode);
+        const updateTaskUrl = "{{ url_for('api_update_task') }}";
+        result = await fetch(
+            updateTaskUrl,
+            {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: card.dataset.taskCode,
+                    status: list.dataset.taskListCode,
+                })
+            }
+        );
+        json = await result.json();
     }
 
     // 3. UTILS

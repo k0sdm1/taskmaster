@@ -26,21 +26,21 @@ tasks = [
         "id": 1,
         "code": "TM-001",
         "name": "task one",
-        "status": "col-in-progress",
+        "status": "in-progress",
         "priority": 1,
     },
     {
         "id": 2,
         "code": "TM-002",
         "name": "task two",
-        "status": "col-backlog",
+        "status": "backlog",
         "priority": 11,
     },
     {
         "id": 3,
         "code": "TM-003",
         "name": "task three",
-        "status": "col-backlog",
+        "status": "review",
         "priority": 12,
     },
 ]
@@ -114,7 +114,7 @@ def register():
 def index():
     context = {}
     context["tasks"] = tasks
-    context["columns"] = [('col-backlog', 'Buglog'), ('col-in-progress', 'In Progress'), ('col-review', 'Review'), ('col-done', 'Done'), ('col-holy-shit', 'Holy Shit!')]
+    context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
     return render_template("index.html", context=context)
 
 
@@ -133,3 +133,9 @@ def api_check_username_exist():
     username = request.args.get('username')
     user = User.query.filter(User.username == username).first()
     return {"user_exists": user is not None}
+
+@app.route("/api/v1/tasks/update/", methods=["POST"])
+def api_update_task():
+    payload = request.get_json()
+    print(payload)
+    return {"status": "ok"}

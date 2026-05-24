@@ -7,13 +7,21 @@
 
     {% endblock %}
 
-<header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #fff; border-bottom: 1px solid #eee;"> <div style="font-weight: bold; font-size: 1.5rem;">
-    <a href="/" style="text-decoration: none; color: black;">TaskMaster</a>
-</div> <nav style="display: flex; align-items: center; gap: 1rem;"> {% if not current_user.id %} <a href="{{ url_for('login') }}" style="text-decoration: none; color: #333;">Login</a> <a href="{{ url_for('register') }}" style="text-decoration: none; color: #333; padding: 5px 15px; border: 1px solid #333; border-radius: 5px;">Register</a> {% else %} <span style="color: #666;">Logged in as: {{ current_user.username }}</span> <a href={{ url_for('logout') }}>logout</a>{% endif %} 
-
-</nav>
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: var(--bg); border-bottom: 1px solid #eee;">
+    <div style="font-weight: bold; font-size: 1.5rem;">
+        <a href="/" style="text-decoration: none; color: var(--text);">TaskMaster</a>
+    </div>
+    <nav style="display: flex; align-items: center; gap: 1rem;">
+        {% if not current_user.id %} <a href="{{ url_for('login') }}" style="text-decoration: none; color: var(--text);">Login</a> <a href="{{ url_for('register') }}" style="text-decoration: none; color: var(--text); padding: 5px 15px; border: 1px solid #333; border-radius: 5px;">Register</a> {% else %} <span style="color: #666;">Logged in as: {{ current_user.username }}</span> <a href={{ url_for('logout') }}>logout</a>{% endif %}
+    <button id="theme-toggle">Toggle theme</button>
+    </nav>
 </header>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+    crossorigin="anonymous"
+    />
     <link
     href="{{ url_for('static', filename='vendor/pnotify/PNotify.css') }}"
     rel="stylesheet"
@@ -26,12 +34,59 @@
     src="{{ url_for('static', filename='vendor/pnotify/PNotify.js') }}"
     ></script>
 
+    <script>
+    (function () {
+        const saved = localStorage.getItem("theme");
+
+        if (saved) {
+            document.documentElement.setAttribute("data-theme", saved);
+        } else {
+            // use system preference initially
+            const prefersDark =
+                window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+            document.documentElement.setAttribute(
+                "data-theme",
+                prefersDark ? "dark" : "light"
+            );
+        }
+    })();
+
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const current =
+            document.documentElement.getAttribute("data-theme");
+
+        const next = current === "dark" ? "light" : "dark";
+
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+    });
+    </script>
+
     <style>
+        :root {
+            --bg: #ffffff;
+            --column-bg: #f1f5f9;
+            --text: #222222;
+            --card-bg: #ffffff;: #f5f5f5;
+            --border: #dddddd;
+        }
+
+        /* dark */
+        [data-theme="dark"] {
+            --bg: #1e1e1e;
+            --column-bg: #f1f5f923;
+            --text: #f1f1f1;
+            --card-bg: #2d2d2d;
+            --border: #555555;
+        }
+
         /* Reset & Base Font */
         body {
             margin: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f8fafc; /* Light grey background */
+            background: var(--bg);
+            color: var(--text);
         }
 
         /* Header Container */
