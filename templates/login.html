@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center vh-100">
+        <!-- Login Card -->
+        <div class="col-md-5 col-lg-4">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-5">
+                    
+                    <!-- Header/Logo Area -->
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark">Welcome Back</h2>
+                        <p class="text-muted">Please enter your details to login</p>
+                    </div>
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Username Field -->
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label fw-semibold") }}
+                            {{ form.username(class="form-control form-control-lg", placeholder="Enter username") }}
+                            {% if form.username.errors %}
+                                {% for error in form.username.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password Field -->
+                        <div class="mb-4">
+                            {{ form.password.label(class="form-label fw-semibold") }}
+                            {{ form.password(class="form-control form-control-lg", placeholder="••••••••") }}
+                            {% if form.password.errors %}
+                                {% for error in form.password.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill shadow-sm") }}
+                        </div>
+
+                        <!-- Optional: Footer link -->
+                        <div class="text-center mt-4">
+                            <p class="small text-muted">Don't have an account? <a href="{{ url_for('register') }}" class="text-decoration-none">Sign Up</a></p>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <!-- End Card -->
+        </div>
+    </div>
+</div>
+{% endblock %}

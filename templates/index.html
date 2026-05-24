@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}TaskMaster{% endblock %}
+{% block head %}
+  {{ super() }}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --column-bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Kanban Board Layout */
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            height: calc(100vh - 80px);
+        }
+
+        .column-wrapper {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.25rem 1rem 0.25rem;
+        }
+
+        .column-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .task-count {
+            background: var(--border-color);
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .task-list {
+            background-color: var(--column-bg);
+            border-radius: 12px;
+            padding: 0.75rem;
+            min-height: 150px;
+            flex-grow: 1;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .task-list.drag-over {
+            background-color: #e2e8f0;
+            border: 2px dashed var(--primary);
+        }
+
+        /* Card Styling */
+        .task-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: var(--shadow);
+            cursor: grab;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            user-select: none;
+            position: relative;
+        }
+
+        .task-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .task-card.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+
+        .task-code {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: #eff6ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-name {
+            font-size: 0.9375rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* --- CONTEXT MENU STYLING --- */
+        #context-menu {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            background: white;
+            min-width: 160px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 5px 0;
+            animation: menuAppear 0.1s ease-out;
+        }
+
+        @keyframes menuAppear {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .menu-item {
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-item:hover {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Separator for more items later */
+        .menu-separator {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 5px 0;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="kanban-board">
+    <!-- Columns -->
+    {% set columns = [('col-backlog', 'Backlog'), ('col-in-progress', 'In Progress'), ('col-review', 'Review'), ('col-done', 'Done')] %}
+    {% for col_id, col_name in context.columns %}
+    <div class="column-wrapper" id="{{ col_id }}">
+        <div class="column-header">
+            <h4 class="column-title">{{ col_name }}</h4>
+            <span class="task-count">0</span>
+        </div>
+        <div class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="removeHighlight(event)"
+        data-task-list-code="{{ col_id }}">
+
+            {% for task in context.tasks %}
+                {% if col_id == task.status %}
+                    <div class="task-card" draggable="true" ondragstart="drag(event)" id="card{{ task.id }}" onclick="openTaskDetail('{{ task.code }}')">
+                        <div class="task-code">{{ task.code }}</div>
+                        <div class="task-name">{{ task.name }}</div>
+                    </div>                    
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Custom Context Menu -->
+<div id="context-menu">
+    <div class="menu-item" onclick="handleMenuAction('top')">Move to Top</div>
+    <div class="menu-item" onclick="handleMenuAction('bottom')">Move to Bottom</div>
+    <div class="menu-separator"></div>
+    <div class="menu-item" onclick="handleMenuAction('delete')" style="color: #ef4444;">Delete (Demo)</div>
+</div>
+
+<script>
+    let currentContextCard = null; // Holds the card currently right-clicked
+
+    // 1. CONTEXT MENU LOGIC
+    document.addEventListener('contextmenu', function(e) {
+        const card = e.target.closest('.task-card');
+        
+        if (card) {
+            e.preventDefault(); // Stop browser menu
+            currentContextCard = card;
+            showContextMenu(e.pageX, e.pageY);
+        } else {
+            hideContextMenu();
+        }
+    });
+
+    // Hide menu when clicking elsewhere
+    document.addEventListener('click', function() {
+        hideContextMenu();
+    });
+
+    function showContextMenu(x, y) {
+        const menu = document.getElementById('context-menu');
+        menu.style.display = 'block';
+        menu.style.left = x + 'px';
+        menu.style.top = y + 'px';
+    }
+
+    function hideContextMenu() {
+        document.getElementById('context-menu').style.display = 'none';
+    }
+
+    function handleMenuAction(action) {
+        if (!currentContextCard) return;
+
+        const list = currentContextCard.parentElement;
+
+        if (action === 'top') {
+            list.prepend(currentContextCard);
+        } else if (action === 'bottom') {
+            list.appendChild(currentContextCard);
+        } else if (action === 'delete') {
+            currentContextCard.remove();
+        }
+
+        updateCounts();
+        hideContextMenu();
+    }
+
+    // 2. DRAG AND DROP LOGIC
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+        setTimeout(() => ev.target.classList.add('dragging'), 0);
+    }
+
+    document.addEventListener("dragend", function(event) {
+        event.target.classList.remove('dragging');
+    });
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+        let target = ev.target;
+        while (target && !target.classList.contains('task-list')) {
+            target = target.parentElement;
+        }
+        if (target) target.classList.add('drag-over');
+    }
+
+    function removeHighlight(ev) {
+        let target = ev.target;
+        while (target && !target.classList.contains('task-list')) {
+            target = target.parentElement;
+        }
+        if (target) target.classList.remove('drag-over');
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const draggedElement = document.getElementById(data);
+
+        let target = ev.target;
+        while (target && !target.classList.contains('task-list')) {
+            target = target.parentElement;
+        }
+
+        if (!target || !draggedElement) return;
+        target.classList.remove('drag-over');
+
+        let closestCard = ev.target;
+        while (closestCard && !closestCard.classList.contains('task-card')) {
+            closestCard = closestCard.parentElement;
+        }
+
+        if (closestCard) {
+            const rect = closestCard.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            if (ev.clientY < midpoint) {
+                target.insertBefore(draggedElement, closestCard);
+            } else {
+                target.insertBefore(draggedElement, closestCard.nextSibling);
+            }
+        } else {
+            target.appendChild(draggedElement);
+        }
+        updateCounts();
+        dropCardToList(draggedElement, target);
+    }
+
+    function dropCardToList(card, list) {
+        alert(list.dataset.taskListCode);
+    }
+
+    // 3. UTILS
+    function updateCounts() {
+        document.querySelectorAll('.column-wrapper').forEach(col => {
+            const count = col.querySelector('.task-list').children.length;
+            col.querySelector('.task-count').innerText = count;
+        });
+    }
+
+    function openTaskDetail(task_code) {
+        const baseUrl = "{{ url_for('task_detail', task_code='PLACEHOLDER') }}";
+        const finalUrl = baseUrl.replace('PLACEHOLDER', task_code);
+        window.open(finalUrl);
+    }
+
+    document.addEventListener("DOMContentLoaded", updateCounts);
+</script>
+{% endblock %}
