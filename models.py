@@ -5,8 +5,9 @@ from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 class Base(DeclarativeBase):
-  pass
+    pass
 
 
 db = SQLAlchemy(model_class=Base)

@@ -1,9 +1,12 @@
+from http import HTTPStatus
+
 from flask import Flask, redirect, request, flash, url_for, render_template, session
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from models import User, db
+from forms.tasks import TaskCreateForm
+from models import Task, User, db
 from forms.users import LoginForm, RegisterForm
 
 APP_NAME = "TaskMaster"
@@ -24,7 +27,7 @@ login_manager.init_app(app)
 tasks = [
     {
         "id": 1,
-        "code": "TM-001",
+        "code": "TM-1",
         "name": "task one",
         "status": "in-progress",
         "priority": 1,
@@ -44,6 +47,13 @@ tasks = [
         "priority": 12,
     },
 ]
+
+
+def get_new_task_code(code_designation="TM-"):
+    last_task = Task.query.order_by(Task.id).scalar()
+    if not last_task:
+        return code_designation + "1"
+    return code_designation + last_task.id
 
 
 @login_manager.user_loader
@@ -113,20 +123,41 @@ def register():
 @app.route("/")
 def index():
     context = {}
-    context["tasks"] = tasks
+    context["tasks"] = Task.query.all()
     context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
+    user_tasks = Task.query.filter(User.id==1).all()
+    print(user_tasks)
     return render_template("index.html", context=context)
 
 
 @app.route("/tasks/<string:task_code>/")
 def task_detail(task_code):
-    return render_template("task_detail.html", data={"code": task_code})
+    task = Task.query.filter(Task.code==task_code).scalar()
+    if not task:
+        return redirect(url_for("index"))
+    return render_template("task_detail.html", task=task)
 
 @app.route("/tasks/create/", methods=['GET', 'POST'])
+@login_required
 def task_create():
-    if request.method == "POST":
+    form = TaskCreateForm()
+    # if request.method == "POST":
+    #     print(request.form)
+    if form.validate_on_submit():
+        print("validates!")
         print(request.form)
-    return render_template("task_create.html")
+        new_task = Task(
+            name=request.form.get("name"),
+            description=request.form.get("description"),
+            created_by_id=current_user.get_id(),
+            code=get_new_task_code(),
+
+        )
+        print(new_task.code)
+        db.session.add(new_task)
+        db.session.commit()
+        return redirect(url_for("task_detail", task_code=new_task.code))
+    return render_template("task_create.html", form=form)
 
 @app.route("/api/v1/users/login/check-exist/", methods=["GET"])
 def api_check_username_exist():
@@ -137,5 +168,17 @@ def api_check_username_exist():
 @app.route("/api/v1/tasks/update/", methods=["POST"])
 def api_update_task():
     payload = request.get_json()
+    task = None
+    if "code" in payload:
+        task = Task.query.filter(Task.code==payload["code"]).scalar()
+    if not task or task is None:
+        return {"status": "error", "error": True, "message": "task not found"}, HTTPStatus.NOT_FOUND
+
     print(payload)
-    return {"status": "ok"}
+    if "status" in payload:
+        task.status = payload["status"]
+
+    if db.session.is_modified(task):
+        db.session.commit()
+        return {"status": "ok", "error": False, "message": "object successfully updated"}, HTTPStatus.OK
+    return {"status": "ok", "error": False, "message": "no change"}, HTTPStatus.NOT_MODIFIED

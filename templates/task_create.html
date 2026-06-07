@@ -1,24 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>new Task</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}new task{% endblock %}
 
-    <form action="" method="post">
-        <label for="task-code">code: </label>
-        <input type="text" name="task-code" id="input-task-code">
-        
-        <label for="task-name">name: </label>
-        <input type="text" name="task-name" id="input-task-name">
-        
-        <label for="task-description">description: </label>
-        <input type="text" name="task-description" id="input-task-description">
-        
-        <input type="submit" value="Create" />
-    </form>
+
+{% block content %}
+    <form method="POST" action="">
+    {{ form.hidden_tag() }}
     
-</body>
-</html>
+    <!-- Username Field -->
+    <div class="mb-3">
+        {{ form.name.label(class="form-label fw-semibold") }}
+        {{ form.name(class="form-control form-control-lg", placeholder="give task a name", id="form-username-field") }}
+        {% if form.name.errors %}
+            {% for error in form.name.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+        <small class="text-danger" id="user-exists-alert"></small>
+    </div>
+    
+    <div class="mb-3">
+        {{ form.description.label(class="form-label fw-semibold") }}
+        {{ form.description(class="form-control form-control-lg", placeholder="") }}
+        {% if form.description.errors %}
+            {% for error in form.description.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <!-- Submit Button -->
+    <div class="d-grid">
+        {{ form.submit(class="btn btn-primary btn-lg rounded-pill shadow-sm") }}
+    </div>
+
+</form>
+    
+{% endblock %}

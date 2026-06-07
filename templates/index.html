@@ -178,6 +178,11 @@
 {% endblock %}
 
 {% block content %}
+<div class="upper-panel">
+    <form action="/tasks/create/">
+        <input type="submit" value="create task" />
+    </form>
+</div>
 <div class="kanban-board">
     <!-- Columns -->
     {% set columns = [('col-backlog', 'Backlog'), ('col-in-progress', 'In Progress'), ('col-review', 'Review'), ('col-done', 'Done')] %}
