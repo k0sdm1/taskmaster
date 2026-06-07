@@ -13,7 +13,7 @@
     </div>
     <nav style="display: flex; align-items: center; gap: 1rem;">
         {% if not current_user.id %} <a href="{{ url_for('login') }}" style="text-decoration: none; color: var(--text);">Login</a> <a href="{{ url_for('register') }}" style="text-decoration: none; color: var(--text); padding: 5px 15px; border: 1px solid #333; border-radius: 5px;">Register</a> {% else %} <span style="color: #666;">Logged in as: {{ current_user.username }}</span> <a href={{ url_for('logout') }}>logout</a>{% endif %}
-    <button id="theme-toggle">Toggle theme</button>
+    <button id="theme-toggle" title="swith light/dark modes">Toggle theme</button>
     </nav>
 </header>
     <link
@@ -35,6 +35,15 @@
     ></script>
 
     <script>
+    const btnTheme = document.getElementById("theme-toggle");
+    function setThemeButtonText() {
+        const theme = document.documentElement.getAttribute("data-theme");
+        if (theme === "dark") {
+            btnTheme.innerText = "☀️";
+        } else {
+            btnTheme.innerText = "🌘";
+        }
+    }
     (function () {
         const saved = localStorage.getItem("theme");
 
@@ -50,9 +59,10 @@
                 prefersDark ? "dark" : "light"
             );
         }
+        setThemeButtonText()
     })();
 
-    document.getElementById("theme-toggle").addEventListener("click", () => {
+    btnTheme.addEventListener("click", () => {
         const current =
             document.documentElement.getAttribute("data-theme");
 
@@ -60,6 +70,7 @@
 
         document.documentElement.setAttribute("data-theme", next);
         localStorage.setItem("theme", next);
+        setThemeButtonText()
     });
     </script>
 
@@ -79,6 +90,13 @@
             --text: #f1f1f1;
             --card-bg: #2d2d2d;
             --border: #555555;
+        }
+
+        #theme-toggle {
+            background: var(--bg);
+            border: none;
+            outline: none;
+            box-shadow: none;
         }
 
         /* Reset & Base Font */
@@ -239,63 +257,7 @@
 
         {% endblock %}
     </div>
-    <div id="footer">
-        {% block footer %}
-            <footer id="footer">
-                <div class="container">
-                    <div class="row">
-                        <!-- Column 1: About Project -->
-                        <div class="col-6 col-md-3 mb-4">
-                            <h6 class="footer-title">About TaskMaster</h6>
-                            <p>A modern productivity tool designed to streamline your daily tasks and boost efficiency through smart organization.</p>
-                            <p>Gemma 4 wrote this, not me.</p>
-                        </div>
-
-                        <!-- Column 2: Quick Links (Suitable Content) -->
-                        <div class="col-6 col-md-3 mb-4">
-                            <h6 class="footer-title">Platform</h6>
-                            <ul class="footer-links">
-                                <li><a href="#">Features</a></li>
-                                <li><a href="#">Pricing</a></li>
-                                <li><a href="#">API Docs</a></li>
-                                <li><a href="#">Support</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- Column 3: Legal Info -->
-                        <div class="col-6 col-md-3 mb-4">
-                            <h6 class="footer-title">Legal</h6>
-                            <ul class="footer-links">
-                                <li><a href="#">Privacy Policy</a></li>
-                                <li><a href="#">Terms of Service</a></li>
-                                <li><a href="#">Cookie Policy</a></li>
-                                <li><a href="#">Security</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- Column 4: Contact/Newsletter (Suitable Content) -->
-                        <div class="col-6 col-md-3 mb-4">
-                            <h6 class="footer-title">Stay Connected</h6>
-                            <p>Subscribe to our newsletter for productivity tips.</p>
-                            <form class="mt-2">
-                                <div class="input-group input-group-sm">
-                                    <input type="email" class="form-control" placeholder="Email">
-                                    <button class="btn btn-primary" type="button">Go</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Copyright Bar -->
-                    <div class="row border-top mt-4 pt-3">
-                        <div class="col-12 text-center">
-                            <small>&copy; 2026 TaskMaster. All rights reserved.</small>
-                        </div>
-                    </div>
-                </div>
-            </footer>
-        {% endblock %}
-    </div>
+    
 
     <script>
     {% with messages = get_flashed_messages(with_categories=true) %}

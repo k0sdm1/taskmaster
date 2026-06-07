@@ -5,7 +5,7 @@ from flask_login import LoginManager, current_user, login_required, login_user, 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from forms.tasks import TaskCreateForm
+from forms.tasks import TaskCreateForm, TaskUpdateForm
 from models import Task, User, db
 from forms.users import LoginForm, RegisterForm
 
@@ -50,10 +50,11 @@ tasks = [
 
 
 def get_new_task_code(code_designation="TM-"):
-    last_task = Task.query.order_by(Task.id).scalar()
+    last_task = db.session.scalar(db.select(Task).order_by(Task.id.desc()))
+    print(last_task)
     if not last_task:
         return code_designation + "1"
-    return code_designation + last_task.id
+    return f"{code_designation}{last_task.id + 1}"
 
 
 @login_manager.user_loader
@@ -136,6 +137,19 @@ def task_detail(task_code):
     if not task:
         return redirect(url_for("index"))
     return render_template("task_detail.html", task=task)
+
+@app.route("/tasks/<string:task_code>/edit/", methods=['GET', 'POST'])
+def task_edit(task_code):
+    task = Task.query.filter(Task.code==task_code).scalar()
+    if not task:
+        return redirect(url_for("index"))
+    form = TaskUpdateForm(obj=task)
+    if form.validate_on_submit():
+        form.populate_obj(task)
+        db.session.commit()
+        return redirect(url_for("task_detail", task_code=task.code))
+
+    return render_template("task_edit.html", form=form, task=task)
 
 @app.route("/tasks/create/", methods=['GET', 'POST'])
 @login_required

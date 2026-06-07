@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}edit: {{task.code}}{% endblock %}
+
+
+{% block content %}
+
+    <form method="POST" action="">
+    {{ form.hidden_tag() }}
+    
+    <!-- Username Field -->
+    <div class="mb-3">
+        {{ form.name.label(class="form-label fw-semibold") }}
+        {{ form.name(class="form-control form-control-lg", placeholder="give task a name", id="form-username-field") }}
+        {% if form.name.errors %}
+            {% for error in form.name.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+        <small class="text-danger" id="user-exists-alert"></small>
+    </div>
+
+    <div class="mb-3">
+        {{ form.code.label(class="form-label fw-semibold") }}
+        {{ form.code(class="form-control form-control-lg", placeholder="give task a name", id="form-username-field") }}
+        {% if form.code.errors %}
+            {% for error in form.code.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+        <small class="text-danger" id="user-exists-alert"></small>
+    </div>
+
+    <div class="mb-3">
+        {{ form.description.label(class="form-label fw-semibold") }}
+        {{ form.description(class="form-control form-control-lg", placeholder="") }}
+        {% if form.description.errors %}
+            {% for error in form.description.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <!-- Submit Button -->
+    <div class="d-grid">
+        {{ form.submit(class="btn btn-primary btn-lg rounded-pill shadow-sm") }}
+    </div>
+
+{% endblock %}

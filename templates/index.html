@@ -30,26 +30,33 @@
 
         /* Kanban Board Layout */
         .kanban-board {
-            display: flex;
-            gap: 1.5rem;
-            align-items: flex-start;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-            height: calc(100vh - 80px);
+    display: flex;
+    gap: 1.5rem;
+    /* Changed from flex-start to stretch to make all columns equal height */
+    align-items: stretch; 
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    /* Ensure the board takes up available space but allows internal scrolling if needed */
+    height: calc(100vh - 80px);
         }
 
         .column-wrapper {
-            flex: 0 0 320px;
-            display: flex;
-            flex-direction: column;
-            max-height: 100%;
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
         }
 
         .column-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0.25rem 1rem 0.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.25rem 1rem 0.25rem;
+    
+    /* --- STICKY LOGIC --- */
+    position: sticky;
+    top: 0;
+    z-index: 10; /* Ensures header stays above cards during scroll */
+    background-color: var(--bg-color); /* Matches body so cards don't show behind text */
         }
 
         .column-title {
@@ -70,13 +77,16 @@
         }
 
         .task-list {
-            background-color: var(--column-bg);
-            border-radius: 12px;
-            padding: 0.75rem;
-            min-height: 150px;
-            flex-grow: 1;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
+    background-color: var(--column-bg);
+    border-radius: 2px;
+    padding: 0.75rem;
+    /* Changed min-height to allow it to grow/shrink within the stretched column */
+    min-height: 150px;
+    flex-grow: 1; 
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    /* Allows the list itself to scroll if tasks exceed column height */
+    overflow-y: auto; 
         }
 
         .task-list.drag-over {
@@ -87,7 +97,7 @@
         /* Card Styling */
         .task-card {
             background-color: var(--card-bg);
-            border-radius: 8px;
+            border-radius: 2px;
             padding: 1rem;
             margin-bottom: 0.75rem;
             box-shadow: var(--shadow);
