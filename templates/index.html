@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block title %}TaskMaster{% endblock %}
 {% block head %}
@@ -9,9 +10,9 @@
     <style>
         :root {
             --bg-color: #f8fafc;
-            --column-bg: var(--column-bg);
-            --card-bg: var(--card-bg);
-            --text-main: var(--text);
+            --column-bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
             --text-muted: #64748b;
             --primary: #3b82f6;
             --primary-hover: #2563eb;
@@ -28,35 +29,38 @@
             padding: 20px;
         }
 
-        /* Kanban Board Layout */
+        /* ===== KANBAN BOARD LAYOUT ===== */
         .kanban-board {
-    display: flex;
-    gap: 1.5rem;
-    /* Changed from flex-start to stretch to make all columns equal height */
-    align-items: stretch; 
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    /* Ensure the board takes up available space but allows internal scrolling if needed */
-    height: calc(100vh - 80px);
+            display: flex;
+            gap: 1.5rem;
+            align-items: stretch;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            height: calc(100vh - 80px);
         }
 
         .column-wrapper {
-    flex: 0 0 320px;
-    display: flex;
-    flex-direction: column;
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            /* All columns stretch to the height of the tallest one */
+            height: 100%;
+            min-height: 0;
         }
 
         .column-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0.25rem 1rem 0.25rem;
-    
-    /* --- STICKY LOGIC --- */
-    position: sticky;
-    top: 0;
-    z-index: 10; /* Ensures header stays above cards during scroll */
-    background-color: var(--bg-color); /* Matches body so cards don't show behind text */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.25rem 1rem 0.25rem;
+            /* Fixed at top of the board, not just the column */
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-color);
+            z-index: 10;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.75rem;
+            flex-shrink: 0;
         }
 
         .column-title {
@@ -76,17 +80,18 @@
             font-size: 0.75rem;
         }
 
+        /* ===== TASK LIST (COLUMN BODY) ===== */
         .task-list {
-    background-color: var(--column-bg);
-    border-radius: 2px;
-    padding: 0.75rem;
-    /* Changed min-height to allow it to grow/shrink within the stretched column */
-    min-height: 150px;
-    flex-grow: 1; 
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
-    /* Allows the list itself to scroll if tasks exceed column height */
-    overflow-y: auto; 
+            background-color: var(--column-bg);
+            border-radius: 2px;
+            padding: 0.75rem;
+            min-height: 150px;
+            flex-grow: 1;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
         .task-list.drag-over {
@@ -94,7 +99,7 @@
             border: 2px dashed var(--primary);
         }
 
-        /* Card Styling */
+        /* ===== CARD STYLING ===== */
         .task-card {
             background-color: var(--card-bg);
             border-radius: 2px;
@@ -106,6 +111,7 @@
             border: 1px solid var(--border-color);
             user-select: none;
             position: relative;
+            flex-shrink: 0;
         }
 
         .task-card:hover {
@@ -136,9 +142,9 @@
             line-height: 1.5;
         }
 
-        /* --- CONTEXT MENU STYLING --- */
+        /* ===== CONTEXT MENU ===== */
         #context-menu {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
             z-index: 1000;
             background: white;
@@ -175,7 +181,6 @@
             font-size: 0.8rem;
         }
 
-        /* Separator for more items later */
         .menu-separator {
             height: 1px;
             background-color: var(--border-color);
@@ -233,14 +238,14 @@
 </div>
 
 <script>
-    let currentContextCard = null; // Holds the card currently right-clicked
+    let currentContextCard = null;
 
     // 1. CONTEXT MENU LOGIC
     document.addEventListener('contextmenu', function(e) {
         const card = e.target.closest('.task-card');
         
         if (card) {
-            e.preventDefault(); // Stop browser menu
+            e.preventDefault();
             currentContextCard = card;
             showContextMenu(e.pageX, e.pageY);
         } else {
@@ -248,7 +253,6 @@
         }
     });
 
-    // Hide menu when clicking elsewhere
     document.addEventListener('click', function() {
         hideContextMenu();
     });
@@ -342,9 +346,8 @@
     }
 
     async function dropCardToList(card, list) {
-        // alert(list.dataset.taskListCode);
         const updateTaskUrl = "{{ url_for('api_update_task') }}";
-        result = await fetch(
+        const result = await fetch(
             updateTaskUrl,
             {
                 method: "POST",
@@ -355,7 +358,7 @@
                 })
             }
         );
-        json = await result.json();
+        const json = await result.json();
     }
 
     // 3. UTILS
@@ -369,7 +372,7 @@
     function openTaskDetail(task_code) {
         const baseUrl = "{{ url_for('task_detail', task_code='PLACEHOLDER') }}";
         const finalUrl = baseUrl.replace('PLACEHOLDER', task_code);
-        window.open(finalUrl);
+        window.open(finalUrl, '_blank');
     }
 
     document.addEventListener("DOMContentLoaded", updateCounts);
