@@ -4,4 +4,5 @@ pip install -r requirements.txt
 
 flask db upgrade
 
-waitress-serve --host 0.0.0.0 app:app
+# waitress-serve --host 0.0.0.0 app:app
+py launcher.py
