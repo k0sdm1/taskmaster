@@ -1,6 +1,7 @@
 import subprocess
 
 while True:
+    subprocess.run(["upgrade_app.sh"], check=True)
     p = subprocess.Popen([
         "waitress-serve",
         "--host",
