@@ -227,7 +227,8 @@ def update_server():
     print("updating!")
 
     # subprocess.run(["gil", "pull"], check=True)
-    subprocess.run(["update_code.bat"], check=True)
+    subprocess.run(["update_code.bat"], check=True)    
+    subprocess.run(["upgrade_app.bat"], check=True)
 
     os._exit(0)
 
