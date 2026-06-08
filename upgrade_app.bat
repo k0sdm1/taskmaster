@@ -1,4 +1,4 @@
-source venv/scripts/activate
+venv\scripts\activate
 
 pip install -r requirements.txt
 
