@@ -237,7 +237,7 @@ def update_server():
     # subprocess.run(["upgrade_app.bat"], check=True)
 
     os._exit(0)
-    exit(0)
+    # exit(0)
     print("kek")
 
     return {"status": "ok", "errors": False, "message": "server updating"}, 200
