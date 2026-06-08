@@ -2,6 +2,8 @@ import subprocess
 
 while True:
     upg = subprocess.Popen(["upgrade_app.bat"])
+    upg.wait()
+
     p = subprocess.Popen([
         "waitress-serve",
         "--host",
