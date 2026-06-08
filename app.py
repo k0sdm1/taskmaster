@@ -227,7 +227,7 @@ def update_server():
     print("updating!")
 
     # subprocess.run(["gil", "pull"], check=True)
-    subprocess.run(["check.bat"], check=True)
+    subprocess.run(["update.bat"], check=True)
 
     return {"status": "ok", "errors": False, "message": "server updating"}, 200
 
