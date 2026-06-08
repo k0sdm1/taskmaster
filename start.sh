@@ -1,3 +1,5 @@
 source venv/scripts/activate
 
-waitress-serve --host 127.0.0.1 app:app
+pip install -r requirements.txt
+
+waitress-serve --host 0.0.0.0 app:app

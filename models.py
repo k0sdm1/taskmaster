@@ -20,6 +20,8 @@ class User(UserMixin, db.Model):
     username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     password_hash: Mapped[str]
+    is_superuser: Mapped[bool] = mapped_column(nullable=True, default=False)
+    is_admin: Mapped[bool] = mapped_column(nullable=True, default=False)
 
     created_tasks: Mapped[list["Task"]] = relationship(
         back_populates="created_by",

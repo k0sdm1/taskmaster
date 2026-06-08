@@ -1,10 +1,13 @@
+import click
 from http import HTTPStatus
+from http.client import HTTPException
 
 from flask import Flask, redirect, request, flash, url_for, render_template, session
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
+from decorators.user import admin_required
 from forms.tasks import TaskCreateForm, TaskUpdateForm
 from models import Task, User, db
 from forms.users import LoginForm, RegisterForm
@@ -17,6 +20,18 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskmaster.db"
 app.config['SECRET_KEY'] = "88005553535"
 db.init_app(app)
+
+@app.cli.command("set-admin")
+@click.argument("name")
+def set_user_admin(name):
+    user = User.query.filter(User.username == name).scalar()
+    if not user:
+        print("user not found")
+    user.is_superuser = True
+    user.is_admin = True
+    db.session.add(user)
+    db.session.commit()
+    print(f"{name} is now admin")
 
 migrate = Migrate(app, db)
 
@@ -61,6 +76,10 @@ def get_new_task_code(code_designation="TM-"):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+@app.route("/admin/")
+@admin_required
+def admin():
+    return render_template("admin.html")
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -135,6 +154,7 @@ def index():
 def task_detail(task_code):
     task = Task.query.filter(Task.code==task_code).scalar()
     if not task:
+        return render_template("404.html")
         return redirect(url_for("index"))
     return render_template("task_detail.html", task=task)
 
@@ -142,7 +162,7 @@ def task_detail(task_code):
 def task_edit(task_code):
     task = Task.query.filter(Task.code==task_code).scalar()
     if not task:
-        return redirect(url_for("index"))
+        return render_template("404.html")
     form = TaskUpdateForm(obj=task)
     if form.validate_on_submit():
         form.populate_obj(task)
@@ -196,3 +216,22 @@ def api_update_task():
         db.session.commit()
         return {"status": "ok", "error": False, "message": "object successfully updated"}, HTTPStatus.OK
     return {"status": "ok", "error": False, "message": "no change"}, HTTPStatus.NOT_MODIFIED
+
+
+@app.route("/api/v1/server-update/")
+@admin_required
+def update_server():
+    import subprocess
+    import os
+
+    print("updating!")
+
+    # subprocess.run(["gil", "pull"], check=True)
+    subprocess.run(["check.bat"], check=True)
+
+    return {"status": "ok", "errors": False, "message": "server updating"}, 200
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404

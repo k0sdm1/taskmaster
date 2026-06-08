@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+Welcome, admin!
+<button id="btn-check-udpates">check for server updates</button>
+
+<script>
+    const btnCheckForUpdates = document.getElementById("btn-check-udpates");
+
+    btnCheckForUpdates.addEventListener("click", (e) => {
+        if (!confirm("do update?")) {
+            return;
+        }
+        const serverUpdateUrl = "{{ url_for('update_server') }}";
+        response = fetch(serverUpdateUrl);
+    });
+
+</script>
+
+{% endblock %}
