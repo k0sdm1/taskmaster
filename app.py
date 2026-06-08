@@ -140,6 +140,12 @@ def register():
     return render_template("register.html", form=form)
 
 
+@app.route("/test/")
+def test_page():
+    print("tested!")
+    return redirect(url_for("index"))
+
+
 @app.route("/")
 def index():
     context = {}
