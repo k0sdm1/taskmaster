@@ -2,6 +2,9 @@ import subprocess
 
 while True:
 
+    subprocess.run(["update_code.bat"], check=True)    
+    subprocess.run(["upgrade_app.bat"], check=True)
+
     p = subprocess.Popen([
         "waitress-serve",
         "--host",
