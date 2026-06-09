@@ -230,6 +230,17 @@ def update_server():
     import subprocess
     from pathlib import Path
 
+    remote_v = subprocess.check_output(
+        ["git", "remote", "-v"]
+    ).decode("utf-8")
+    if not "https://github.com" in remote_v:
+        return {
+            "status": "ok",
+            "errors": False,
+            "update_available": False,
+            "message": "update avaliable only with github https. manual check/update required."
+        }, 200
+
     print("update checking")
 
     # Update remote refs
