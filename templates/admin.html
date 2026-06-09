@@ -15,7 +15,7 @@ Welcome, admin!
         const serverUpdateUrl = "{{ url_for('update_server') }}";
         const response = await fetch(serverUpdateUrl);
         const data = await response.json();
-        alert(data.update_available);
+        alert(data.message);
     });
 
 </script>
