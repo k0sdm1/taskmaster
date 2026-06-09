@@ -1,17 +1,29 @@
+from time import sleep
+from pathlib import Path
 import subprocess
 
 while True:
-
-    subprocess.run(["update_code.bat"], check=True)    
-    subprocess.run(["upgrade_app.bat"], check=True)
-
     p = subprocess.Popen([
         "waitress-serve",
-        "--host",
-        "0.0.0.0",
+        "--host", "0.0.0.0",
         "app:app"
     ])
 
-    p.wait()
+    # Wait until update is requested
+    while p.poll() is None:
+        if Path("update.flag").exists():
+            Path("update.flag").unlink()
+            p.terminate()
+            p.wait()
+            break
+        sleep(1)
 
-    print("Application exited, restarting...")
+    subprocess.run(
+        ["git", "reset", "--hard", "origin/main"],
+        check=True
+    )
+
+    subprocess.run(
+        ["upgrade_app.bat"],
+        check=True
+    )

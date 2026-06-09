@@ -8,13 +8,14 @@ Welcome, admin!
 <script>
     const btnCheckForUpdates = document.getElementById("btn-check-udpates");
 
-    btnCheckForUpdates.addEventListener("click", (e) => {
+    btnCheckForUpdates.addEventListener("click", async (e) => {
         if (!confirm("do update?")) {
             return;
         }
         const serverUpdateUrl = "{{ url_for('update_server') }}";
-        response = fetch(serverUpdateUrl);
-        alert("will update soon");
+        const response = await fetch(serverUpdateUrl);
+        const data = await response.json();
+        alert(data.update_available);
     });
 
 </script>

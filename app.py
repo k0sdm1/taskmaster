@@ -228,19 +228,50 @@ def api_update_task():
 @admin_required
 def update_server():
     import subprocess
-    import os
+    from pathlib import Path
 
-    print("updating!")
+    print("update checking")
 
-    # subprocess.run(["gil", "pull"], check=True)
-    # subprocess.run(["update_code.bat"], check=True)    
-    # subprocess.run(["upgrade_app.bat"], check=True)
+    # Update remote refs
+    subprocess.run(
+        ["git", "fetch"],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-    os._exit(0)
-    # exit(0)
-    print("kek")
+    print("fetch finishes")
 
-    return {"status": "ok", "errors": False, "message": "server updating"}, 200
+    local = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        text=True
+    ).strip()
+
+    print("rev-parse HEAD finished")
+
+    remote = subprocess.check_output(
+        ["git", "rev-parse", "origin/main"],
+        text=True
+    ).strip()
+
+    print("rev-parse origin/main finished")
+
+    if local == remote:
+        return {
+            "status": "ok",
+            "errors": False,
+            "update_available": False,
+            "message": "Server is already up to date."
+        }, 200
+
+    Path("update.flag").touch()
+
+    return {
+        "status": "ok",
+        "errors": False,
+        "update_available": True,
+        "message": "Update found. Server will restart shortly."
+    }, 200
 
 
 @app.errorhandler(404)
