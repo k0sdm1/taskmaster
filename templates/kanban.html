@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}kanban{% endblock %}
+{% block head %}
+    <style>
+        :root {
+            --bg-darkest: #121212;
+            --bg-dark: #1e1e1e;
+            --bg-medium: #2d2d2d;
+            --bg-light: #383838;
+            --border-color: #444444;
+            --text-primary: #e0e0e0;
+            --accent: #5c9eff;
+            --board-padding: 20px; /* Centralized padding variable */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-darkest);
+            color: var(--text-primary);
+            overflow: hidden; 
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .upper-panel {
+            padding: 15px 20px;
+            background-color: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .upper-panel button {
+            background-color: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .upper-panel button:hover { background-color: #4a8eeb; }
+
+        .columns {
+            display: flex;
+            gap: 20px;
+            /* Top padding removed from here to prevent the sticky header gap */
+            padding: 0px var(--board-padding) var(--board-padding) var(--board-padding);
+            flex: 1; 
+            overflow-x: auto; 
+            overflow-y: auto; 
+            align-items: flex-start; 
+            background-color: var(--bg-darkest);
+        }
+
+        .columns::-webkit-scrollbar { height: 12px; width: 12px; }
+        .columns::-webkit-scrollbar-track { background: var(--bg-dark); }
+        .columns::-webkit-scrollbar-thumb { background: var(--bg-light); border-radius: 6px; border: 3px solid var(--bg-dark); }
+
+        .column {
+            background-color: var(--bg-medium);
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            min-width: 300px;
+            max-width: 300px;
+            border: 1px solid var(--border-color);
+            /* Top padding moved here so columns still have visual breathing room */
+            /* margin-top: var(--board-padding);  */
+        }
+
+        .column-header {
+            padding: 15px;
+            font-weight: bold;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            color: #fff;
+            position: sticky;
+            /* Sticks exactly at the top of the scroll area, 
+               eliminating the gap where tasks could peek through */
+            top: 0; 
+            z-index: 10;
+        }
+
+        .task-list {
+            padding: 10px;
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 50px;
+            transition: background 0.2s;
+        }
+
+        .task-list.drag-over {
+            background-color: rgba(255, 255, 255, 0.03);
+            outline: 2px dashed var(--accent);
+            outline-offset: -5px;
+            border-radius: 4px;
+        }
+
+        .task-card {
+            background-color: var(--bg-light);
+            padding: 15px;
+            border-radius: 2px;
+            cursor: grab;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .task-card:hover { border-color: #666; }
+        .task-card:active { cursor: grabbing; }
+
+        .task-card.dragging {
+            opacity: 0.4;
+            transform: scale(0.98);
+        }
+
+        .drop-placeholder {
+            height: 50px;
+            background: rgba(92, 158, 255, 0.15);
+            border: 2px dashed var(--accent);
+            border-radius: 6px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="main-container">
+    <div class="upper-panel">
+        <button>+ Add Task</button>
+        <button onclick="addColumn()">+ Add Column</button>
+    </div>
+    
+    <div class="columns" id="board">
+        <div class="column">
+            <div class="column-header">To Do</div>
+            <div class="task-list">
+                <div class="task-card" draggable="true">Research competitors</div>
+                <div class="task-card" draggable="true">Design wireframes</div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="column-header">In Progress</div>
+            <div class="task-list">
+                <div class="task-card" draggable="true">Develop API endpoints</div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="column-header">Review</div>
+            <div class="task-list">
+                <div class="task-card" draggable="true">Code review for UI</div>
+            </div>
+        </div>
+
+        <!-- This is the Tallest Column -->
+        <div class="column">
+            <div class="column-header">Done</div>
+            <div class="task-list">
+                <div class="task-card" draggable="true">Project kickoff</div>
+                <div class="task-card" draggable="true">Requirements gathering</div>
+                <div class="task-card" draggable="true">Environment setup</div>
+                <div class="task-card" draggable="true">Architecture design</div>
+                <div class="task-card" draggable="true">Initial prototype</div>
+                <div class="task-card" draggable="true">Stakeholder approval</div>
+                <div class="task-card" draggable="true">Sprint planning</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let draggedItem = null;
+    let originalParent = null;
+    let originalNextSibling = null;
+    let wasDropped = false;
+
+    const board = document.getElementById('board');
+    const placeholder = document.createElement('div');
+    placeholder.className = 'drop-placeholder';
+
+    // CRITICAL FUNCTION: Syncs the height of all columns to the tallest one
+    function updateColumnHeights() {
+        const columns = board.querySelectorAll('.column');
+        
+        // Temporarily reset heights to measure natural content size
+        columns.forEach(col => col.style.height = 'auto');
+        
+        // Start with the visible height of the board
+        let maxHeight = board.clientHeight;
+        
+        // Find the absolute tallest column based on content
+        columns.forEach(col => {
+            if (col.scrollHeight > maxHeight) {
+                maxHeight = col.scrollHeight;
+            }
+        });
+        
+        // Apply the max height to ALL columns.
+        // This causes the inner .task-list (with flex: 1) to stretch to the bottom.
+        columns.forEach(col => {
+            col.style.height = `${maxHeight + 60}px`;
+        });
+    }
+
+    function addColumn() {
+        const col = document.createElement('div');
+        col.className = 'column';
+        col.innerHTML = `
+            <div class="column-header">New Column</div>
+            <div class="task-list">
+                <div class="task-card" draggable="true">New Task</div>
+            </div>
+        `;
+        board.appendChild(col);
+        updateColumnHeights(); // Recalculate immediately
+    }
+
+    // Event Delegation for DnD
+    board.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('task-card')) {
+            draggedItem = e.target;
+            originalParent = draggedItem.parentNode;
+            originalNextSibling = draggedItem.nextSibling;
+            wasDropped = false;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => draggedItem.classList.add('dragging'), 0);
+        }
+    });
+
+    board.addEventListener('dragend', (e) => {
+        if (draggedItem) {
+            draggedItem.classList.remove('dragging');
+            
+            // If the user dropped outside a valid column, return to original position
+            if (!wasDropped) {
+                if (originalNextSibling) {
+                    originalParent.insertBefore(draggedItem, originalNextSibling);
+                } else {
+                    originalParent.appendChild(draggedItem);
+                }
+            }
+            
+            // Clean up placeholder if left behind
+            if (placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
+            
+            draggedItem = null;
+        }
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+
+    board.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const column = e.target.closest('.column');
+        if (!column) return;
+
+        const taskList = column.querySelector('.task-list');
+        taskList.classList.add('drag-over');
+
+        const afterElement = getDragAfterElement(taskList, e.clientY);
+        
+        if (afterElement == null) {
+            taskList.appendChild(placeholder);
+        } else {
+            taskList.insertBefore(placeholder, afterElement);
+        }
+    });
+
+    board.addEventListener('dragleave', (e) => {
+        const column = e.target.closest('.column');
+        if (column) {
+            const taskList = column.querySelector('.task-list');
+            if (!taskList.contains(e.relatedTarget)) {
+                taskList.classList.remove('drag-over');
+            }
+        }
+    });
+
+    board.addEventListener('drop', (e) => {
+        e.preventDefault();
+        wasDropped = true;
+        if (draggedItem) {
+            if (placeholder.parentNode) {
+                placeholder.parentNode.replaceChild(draggedItem, placeholder);
+            }
+        }
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        
+        // Recalculate heights after drop in case the tallest column changed
+        setTimeout(updateColumnHeights, 0);
+    });
+
+    function getDragAfterElement(taskList, y) {
+        const draggableElements = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Initial setup & Window resize listener
+    window.addEventListener('load', updateColumnHeights);
+    window.addEventListener('resize', updateColumnHeights);
+
+
+
+</script>
+{% endblock %}

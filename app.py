@@ -156,6 +156,16 @@ def index():
     return render_template("index.html", context=context)
 
 
+@app.route("/kanban/")
+def kanban():
+    context = {}
+    context["tasks"] = Task.query.all()
+    context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
+    # user_tasks = Task.query.filter(User.id==1).all()
+    # print(user_tasks)
+    return render_template("kanban.html", context=context)
+
+
 @app.route("/tasks/<string:task_code>/")
 def task_detail(task_code):
     task = Task.query.filter(Task.code==task_code).scalar()
