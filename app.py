@@ -64,9 +64,11 @@ tasks = [
 ]
 
 
-def get_new_task_code(code_designation="TM-"):
-    last_task = db.session.scalar(db.select(Task).order_by(Task.id.desc()))
-    print(last_task)
+def get_last_task():
+    return db.session.scalar(db.select(Task).order_by(Task.id.desc()))
+
+
+def get_new_task_code(last_task, code_designation="TM-"):
     if not last_task:
         return code_designation + "1"
     return f"{code_designation}{last_task.id + 1}"
@@ -224,6 +226,7 @@ def task_create():
     form = TaskCreateForm()
     # if request.method == "POST":
     #     print(request.form)
+    last_task = get_last_task()
     if form.validate_on_submit():
         print("validates!")
         print(request.form)
@@ -231,10 +234,11 @@ def task_create():
             name=request.form.get("name"),
             description=request.form.get("description"),
             created_by_id=current_user.get_id(),
-            code=get_new_task_code(),
-
+            code=get_new_task_code(last_task=last_task),
+            position_before=last_task.code,
         )
-        print(new_task.code)
+        last_task.position_after = new_task.code
+        print("creating: ", new_task.code)
         db.session.add(new_task)
         db.session.commit()
         return redirect(url_for("task_detail", task_code=new_task.code))
