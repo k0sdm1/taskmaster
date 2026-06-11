@@ -166,7 +166,8 @@ def _sort_tasks(tasks):
 
     for t in ordered:
         print(t.code)
-    
+    if len(visited) != len(tasks):
+        return tasks
     return ordered
 
 
