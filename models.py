@@ -61,3 +61,5 @@ class Task(db.Model):
         back_populates="tasks_working_on",
         foreign_keys=[assigned_to_id],
     )
+    position_before: Mapped[str] = mapped_column(nullable=True)
+    position_after: Mapped[str] = mapped_column(nullable=True)

@@ -288,10 +288,26 @@
         hideContextMenu();
     }
 
+    var draggedPreviousTaskCode = null;
+    var draggedNextTaskCode = null;
+
     // 2. DRAG AND DROP LOGIC
     function drag(ev) {
         ev.dataTransfer.setData("text", ev.target.id);
         setTimeout(() => ev.target.classList.add('dragging'), 0);
+        if (ev.target.previousElementSibling) {
+            draggedPreviousTaskCode = ev.target.previousElementSibling.dataset.taskCode;
+        } else {
+            draggedPreviousTaskCode = null;
+        }
+        if (ev.target.nextElementSibling) {
+            draggedNextTaskCode = ev.target.nextElementSibling.dataset.taskCode;
+        } else {
+            draggedNextTaskCode = null;
+        }
+        // console.log(`draggedPreviousTaskCode: ${draggedPreviousTaskCode}`);
+        // console.log(`draggedNextTaskCode: ${draggedNextTaskCode}`);
+        
     }
 
     document.addEventListener("dragend", function(event) {
@@ -349,6 +365,17 @@
     }
 
     async function dropCardToList(card, list) {
+        const previousTask = card.previousElementSibling;
+        const nextTask = card.nextElementSibling;
+
+        const previousTaskCode = previousTask ? previousTask.dataset.taskCode : null;
+        const nextTaskCode = nextTask ? nextTask.dataset.taskCode : null;
+
+        // console.log(`previousTast: ${previousTaskCode}`);
+        // console.log(`nextTask: ${nextTaskCode}`);
+        // console.log(`draggedPreviousTaskCode: ${draggedPreviousTaskCode}`);
+        // console.log(`draggedNextTaskCode: ${draggedNextTaskCode}`);
+        // alert(`previous: ${previousTast.dataset.taskCode}, next: ${nextTask.dataset.taskCode}`);
         const updateTaskUrl = "{{ url_for('api_update_task') }}";
         const result = await fetch(
             updateTaskUrl,
@@ -358,6 +385,11 @@
                 body: JSON.stringify({
                     code: card.dataset.taskCode,
                     status: list.dataset.taskListCode,
+                    new_previous_task_code: previousTaskCode,
+                    new_next_task_code: nextTaskCode,
+                    dragged_prev_task_code: draggedPreviousTaskCode,
+                    dragged_next_task_code:  draggedNextTaskCode,
+
                 })
             }
         );

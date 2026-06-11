@@ -146,10 +146,37 @@ def test_page():
     return redirect(url_for("index"))
 
 
+def _sort_tasks(tasks):
+    lookup = {t.code: t for t in tasks}
+
+    head = next(t for t in tasks if t.position_before is None)
+    heads = [task for task in tasks if task.position_before is None]
+
+    ordered = []
+    visited = set()
+
+    for head in heads:
+        current = head
+        while current:
+            if current.code in visited:
+                raise Exception("Loop detected!")
+            visited.add(current.code)
+            ordered.append(current)
+            current = lookup.get(current.position_after)
+
+    for t in ordered:
+        print(t.code)
+    
+    return ordered
+
+
 @app.route("/")
 def index():
     context = {}
-    context["tasks"] = Task.query.all()
+    tasks = Task.query.all()
+    # for task in tasks:
+    #     print(task, task.position_before, task.position_after)
+    context["tasks"] = _sort_tasks(tasks)
     context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
     user_tasks = Task.query.filter(User.id==1).all()
     print(user_tasks)
@@ -159,7 +186,10 @@ def index():
 @app.route("/kanban/")
 def kanban():
     context = {}
-    context["tasks"] = Task.query.all()
+    tasks = list(Task.query.all())
+    for task in tasks:
+        print(task, task.position_before, task.position_after)
+    context["tasks"] = tasks
     context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
     # user_tasks = Task.query.filter(User.id==1).all()
     # print(user_tasks)
@@ -224,14 +254,37 @@ def api_update_task():
     if not task or task is None:
         return {"status": "error", "error": True, "message": "task not found"}, HTTPStatus.NOT_FOUND
 
-    print(payload)
     if "status" in payload:
         task.status = payload["status"]
 
-    if db.session.is_modified(task):
-        db.session.commit()
-        return {"status": "ok", "error": False, "message": "object successfully updated"}, HTTPStatus.OK
-    return {"status": "ok", "error": False, "message": "no change"}, HTTPStatus.NOT_MODIFIED
+    drag_prev_task = Task.query.filter(Task.code==payload["dragged_prev_task_code"]).scalar()
+    if drag_prev_task:
+        drag_prev_task.position_after = payload["dragged_next_task_code"]
+        db.session.add(drag_prev_task)
+    
+    drag_next_task = Task.query.filter(Task.code==payload["dragged_next_task_code"]).scalar()
+    if drag_next_task:
+        drag_next_task.position_before = payload["dragged_prev_task_code"]
+        db.session.add(drag_next_task)
+
+    task.position_after = payload["new_next_task_code"]
+    task.position_before = payload["new_previous_task_code"]
+
+    task_before = Task.query.filter(Task.code==payload["new_previous_task_code"]).scalar()
+    if task_before:
+        task_before.position_after = task.code
+        db.session.add(task_before)
+    task_after = Task.query.filter(Task.code==payload["new_next_task_code"]).scalar()
+    if task_after:
+        task_after.position_before = task.code
+        db.session.add(task_after)
+
+    db.session.commit()
+    return {"status": "ok", "error": False, "message": "object successfully updated"}, HTTPStatus.OK
+    # if db.session.is_modified(task):
+    #     db.session.commit()
+    #     return {"status": "ok", "error": False, "message": "object successfully updated"}, HTTPStatus.OK
+    # return {"status": "ok", "error": False, "message": "no change"}, HTTPStatus.NOT_MODIFIED
 
 
 @app.route("/api/v1/server-update/")
