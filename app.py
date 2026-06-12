@@ -158,10 +158,13 @@ def _sort_tasks(tasks):
     visited = set()
 
     for head in heads:
+        current: Task
         current = head
         while current:
             if current.code in visited:
-                raise Exception("Loop detected!")
+                print(current.code, current.position_before, current.position_after)
+                return tasks
+                # raise Exception("Loop detected!")
             visited.add(current.code)
             ordered.append(current)
             current = lookup.get(current.position_after)
@@ -197,6 +200,19 @@ def kanban():
     # user_tasks = Task.query.filter(User.id==1).all()
     # print(user_tasks)
     return render_template("kanban.html", context=context)
+
+
+@app.route("/kanban-s/")
+def kanban_sortable():
+    context = {}
+    tasks = list(Task.query.all())
+    for task in tasks:
+        print(task, task.position_before, task.position_after)
+    context["tasks"] = tasks
+    context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
+    # user_tasks = Task.query.filter(User.id==1).all()
+    # print(user_tasks)
+    return render_template("kanban-sortable.html", context=context)
 
 
 @app.route("/tasks/<string:task_code>/")
