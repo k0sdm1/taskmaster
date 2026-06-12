@@ -73,6 +73,12 @@ tasks = [
 def get_last_task():
     return db.session.scalar(db.select(Task).order_by(Task.id.desc()))
 
+def get_last_task_in(column: str = "backlog") -> Task:
+    last_task = db.session.scalar(db.select(Task).where(Task.status == column, Task.position_after == None).order_by(Task.id.desc()))
+
+    print(last_task)
+    return last_task
+
 
 def get_new_task_code(last_task, code_designation="TM-"):
     if not last_task:
@@ -150,7 +156,7 @@ def register():
 
 @app.route("/test/")
 def test_page():
-    print("tested!")
+    print("tested!", get_last_task_in())
     return redirect(url_for("index"))
 
 
@@ -250,6 +256,7 @@ def task_create():
     # if request.method == "POST":
     #     print(request.form)
     last_task = get_last_task()
+    last_backlog_task = get_last_task_in("backlog")
     if form.validate_on_submit():
         print("validates!")
         print(request.form)
@@ -258,9 +265,9 @@ def task_create():
             description=request.form.get("description"),
             created_by_id=current_user.get_id(),
             code=get_new_task_code(last_task=last_task),
-            position_before=last_task.code,
+            position_before=last_backlog_task.code,
         )
-        last_task.position_after = new_task.code
+        last_backlog_task.position_after = new_task.code
         print("creating: ", new_task.code)
         db.session.add(new_task)
         db.session.commit()
