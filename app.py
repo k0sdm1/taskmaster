@@ -1,3 +1,5 @@
+import logging
+
 import click
 from http import HTTPStatus
 from http.client import HTTPException
@@ -13,6 +15,10 @@ from models import Task, User, db
 from forms.users import LoginForm, RegisterForm
 
 APP_NAME = "TaskMaster"
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='taskmaster.log', encoding='utf-8', level=logging.DEBUG)
 
 
 app = Flask(APP_NAME)
@@ -163,6 +169,7 @@ def _sort_tasks(tasks):
         while current:
             if current.code in visited:
                 print(current.code, current.position_before, current.position_after)
+                logger.debug(f"{current.code}, {current.position_before}, {current.position_after}")
                 return tasks
                 # raise Exception("Loop detected!")
             visited.add(current.code)
