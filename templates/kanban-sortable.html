@@ -1,0 +1,126 @@
+
+{% extends "base.html" %}
+{% block title %}TaskMaster{% endblock %}
+{% block head %}
+    {{ super() }}
+    <!-- <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script> -->
+    <script
+      src="{{ url_for('static', filename='vendor/sortablejs/Sortable.js') }}"
+    ></script>
+   <style>
+    :root {
+        overflow: hidden;
+
+    }
+    .page {
+        height: 500px;
+    }
+        .blue-background-class {
+            background-color: blue;
+        }
+        .columns-placeholder {
+            border: 2px;
+            border-color: white;
+            background-color: teal;
+            height: auto;
+        }
+        .columns {
+            display: flex;
+            gap: 20px;
+            /* Top padding removed from here to prevent the sticky header gap */
+            padding: 0px var(--board-padding) var(--board-padding) var(--board-padding);
+            flex: 1;
+            align-items: stretch;
+            overflow-x: auto; 
+            overflow-y: auto; 
+            height: 500px;
+        }
+        .column {
+            border: 2px;
+            border-color: white;
+            background-color: rgb(0, 94, 103);
+        }
+        .task {
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            border: 2px solid;
+            border-radius: 1px;
+            border-color: white;
+        }
+        .column-header {
+            padding: 15px;
+            font-weight: bold;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            color: #fff;
+            position: sticky;
+            /* Sticks exactly at the top of the scroll area, 
+               eliminating the gap where tasks could peek through */
+            top: 0; 
+            z-index: 10;
+        }
+   </style>
+{% endblock %}
+{% block content %}
+<div class="page">
+<div class="columns">
+    <div class="columns-placeholder">
+        <div class="column-header">
+            buglog
+        </div>
+        <div class="column" id="todo">
+            <div class="task" data-id="1">Task 1</div>
+            <div class="task" data-id="2">Task 2</div>
+            <div class="task" data-id="3">Task 3</div>
+            <div class="task" data-id="4">Task 4</div>
+            <div class="task" data-id="5">Task 5</div>
+            <div class="task" data-id="6">Task 6</div>
+            <div class="task" data-id="7">Task 7</div>
+            <div class="task" data-id="1">Task 1</div>
+            <div class="task" data-id="2">Task 2</div>
+            <div class="task" data-id="3">Task 3</div>
+            <div class="task" data-id="4">Task 4</div>
+            <div class="task" data-id="5">Task 5</div>
+            <div class="task" data-id="6">Task 6</div>
+            <div class="task" data-id="7">Task 7</div>
+            <div class="task" data-id="1">Task 1</div>
+            <div class="task" data-id="2">Task 2</div>
+            <div class="task" data-id="3">Task 3</div>
+            <div class="task" data-id="4">Task 4</div>
+            <div class="task" data-id="5">Task 5</div>
+            <div class="task" data-id="6">Task 6</div>
+            <div class="task" data-id="7">Task 7</div>
+            <div class="task" data-id="1">Task 1</div>
+            <div class="task" data-id="2">Task 2</div>
+            <div class="task" data-id="3">Task 3</div>
+            <div class="task" data-id="4">Task 4</div>
+            <div class="task" data-id="5">Task 5</div>
+            <div class="task" data-id="6">Task 6</div>
+            <div class="task" data-id="7">Task 7</div>
+        </div>
+    </div>
+
+    <div class="columns-placeholder">
+        <div class="column-header">
+            in progress
+        </div>
+        <div class="column" id="in-progress">
+            <div class="task" data-id="1">Task 1</div>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+    document.querySelectorAll(".column").forEach(column => {
+    new Sortable(column, {
+        group: "kanban",
+        animation: 150,
+        ghostClass: 'blue-background-class'
+    });
+});
+</script>
+
+{% endblock %}
