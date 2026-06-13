@@ -247,20 +247,24 @@ def task_detail(task_code):
 @app.route("/tasks/<string:task_code>/edit/", methods=['GET', 'POST'])
 def task_edit(task_code):
     task = Task.query.filter(Task.code==task_code).scalar()
+    boards = Board.query.all()
     if not task:
         return render_template("404.html")
     form = TaskUpdateForm(obj=task)
+    form.board.choices = [(board.id, board.name) for board in boards]
     if form.validate_on_submit():
         form.populate_obj(task)
         db.session.commit()
         return redirect(url_for("task_detail", task_code=task.code))
 
-    return render_template("task_edit.html", form=form, task=task)
+    return render_template("task_edit.html", form=form, task=task, boards=boards)
 
 @app.route("/tasks/create/", methods=['GET', 'POST'])
 @login_required
 def task_create():
     form = TaskCreateForm()
+    boards = Board.query.all()
+    form.board.choices = [(board.id, board.name) for board in boards]
     # if request.method == "POST":
     #     print(request.form)
     last_task = get_last_task()

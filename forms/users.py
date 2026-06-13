@@ -5,15 +5,16 @@ from wtforms.validators import DataRequired, Email
 from models import User
 
 
-class LoginForm(FlaskForm):
+class UserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
+
+
+class LoginForm(UserForm):
     submit = SubmitField('Log In')
 
 
-class RegisterForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()])    
-    password = PasswordField('Password', validators=[DataRequired()])
+class RegisterForm(UserForm):
     email = EmailField('Email', validators=[Email()])
     submit = SubmitField('Register')
 

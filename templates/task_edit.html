@@ -20,21 +20,20 @@
     </div>
 
     <div class="mb-3">
-        {{ form.code.label(class="form-label fw-semibold") }}
-        {{ form.code(class="form-control form-control-lg", placeholder="give task a name", id="form-username-field") }}
-        {% if form.code.errors %}
-            {% for error in form.code.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        {% endif %}
-        <small class="text-danger" id="user-exists-alert"></small>
-    </div>
-
-    <div class="mb-3">
         {{ form.description.label(class="form-label fw-semibold") }}
         {{ form.description(class="form-control form-control-lg", placeholder="") }}
         {% if form.description.errors %}
             {% for error in form.description.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.board.label(class="form-label fw-semibold") }}
+        {{ form.board(class="form-control form-control-lg", placeholder="") }}
+        {% if form.board.errors %}
+            {% for error in form.board.errors %}
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         {% endif %}

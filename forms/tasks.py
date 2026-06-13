@@ -1,18 +1,17 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, EmailField, ValidationError, TextAreaField
+from wtforms import StringField, SubmitField, EmailField, ValidationError, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Email
 
-from models import Task
 
-
-class TaskCreateForm(FlaskForm):
+class TaskForm(FlaskForm):
     name = StringField('name', validators=[DataRequired()])
     description = TextAreaField('description', validators=[DataRequired()])
+    board = SelectField("board", coerce=int)
+
+
+class TaskCreateForm(TaskForm):
     submit = SubmitField('create task')
 
 
-class TaskUpdateForm(FlaskForm):
-    name = StringField('name', validators=[DataRequired()])
-    code = StringField('code', validators=[DataRequired()])
-    description = TextAreaField('description', validators=[DataRequired()])
+class TaskUpdateForm(TaskForm):
     submit = SubmitField('update task')

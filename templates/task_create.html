@@ -27,6 +27,16 @@
             {% endfor %}
         {% endif %}
     </div>
+
+    <div class="mb-3">
+        {{ form.board.label(class="form-label fw-semibold") }}
+        {{ form.board(class="form-control form-control-lg", placeholder="") }}
+        {% if form.board.errors %}
+            {% for error in form.board.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+    </div>
     
     <!-- Submit Button -->
     <div class="d-grid">
