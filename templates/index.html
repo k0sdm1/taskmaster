@@ -234,6 +234,7 @@
                     id="card{{ task.id }}"
                     onclick="openTaskDetail('{{ task.code }}')"
                     data-task-code="{{ task.code }}"
+                    data-task-position="{{ task.position }}"
                     >
                         <div class="task-code">{{ task.code }}</div>
                         <div class="task-name">{{ task.name }}</div>
@@ -384,6 +385,9 @@
         const previousTaskCode = previousTask ? previousTask.dataset.taskCode : null;
         const nextTaskCode = nextTask ? nextTask.dataset.taskCode : null;
 
+        const previousTaskPosition = previousTask ? previousTask.dataset.taskPosition : null;
+        const nextTaskPosition = nextTask ? nextTask.dataset.taskPosition : null;
+
         // console.log(`previousTast: ${previousTaskCode}`);
         // console.log(`nextTask: ${nextTaskCode}`);
         // console.log(`draggedPreviousTaskCode: ${draggedPreviousTaskCode}`);
@@ -402,6 +406,8 @@
                     new_next_task_code: nextTaskCode,
                     dragged_prev_task_code: draggedPreviousTaskCode,
                     dragged_next_task_code:  draggedNextTaskCode,
+                    previous_task_position: previousTaskPosition,
+                    next_task_position: nextTaskPosition,
 
                 })
             }

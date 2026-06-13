@@ -151,6 +151,26 @@ def get_tasks(url_params: dict) -> list[Task]:
     return tasks
 
 
+def _set_task_new_position(task: Task, task_above: int | None, task_below: int | None):
+    new_position = 0
+    if task_above is not None and task_below is not None:
+        # task placed between two tasks
+        new_position = (int(task_above) + int(task_below)) // 2
+    elif task_above is None and task_below is not None:
+        # it is now first task, we substact from position below
+        new_position = int(task_below) - 1_000_000
+    elif task_below is None and task_above is not None:
+        # it is now last task, we add to position above
+        new_position = int(task_above) + 1_000_000
+    else:
+        # task is alone in the column
+        new_position = 1_000_000
+
+    print(f"{task.position=}, {new_position=}")
+    task.position = new_position
+    
+
+
 @app.route("/")
 def index():
     print(request.args)
@@ -163,7 +183,8 @@ def index():
     print(current_board)
     # for task in tasks:
     #     print(task, task.position_before, task.position_after)
-    context["tasks"] = _sort_tasks(tasks)
+    # context["tasks"] = _sort_tasks(tasks)
+    context["tasks"] = tasks
     context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
     context["boards"] = boards
     # user_tasks = Task.query.filter(User.id==1).all()
@@ -209,11 +230,18 @@ def api_check_username_exist():
 @app.route("/api/v1/tasks/update/", methods=["POST"])
 def api_update_task():
     payload = request.get_json()
+    # print(payload)
     task = None
     if "code" in payload:
         task = Task.query.filter(Task.code==payload["code"]).scalar()
     if not task or task is None:
         return {"status": "error", "error": True, "message": "task not found"}, HTTPStatus.NOT_FOUND
+    
+    _set_task_new_position(
+        task=task,
+        task_above=payload.get("previous_task_position"),
+        task_below=payload.get("next_task_position"),
+    )
 
     if "status" in payload:
         task.status = payload["status"]
