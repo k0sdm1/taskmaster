@@ -4,14 +4,14 @@ import click
 from http import HTTPStatus
 from http.client import HTTPException
 
-from flask import Flask, redirect, request, flash, url_for, render_template, session
+from flask import Flask, redirect, request, flash, url_for, render_template, session, make_response
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 from decorators.user import admin_required
 from forms.tasks import TaskCreateForm, TaskUpdateForm
-from models import Task, User, db
+from models import Board, Task, User, db
 from forms.users import LoginForm, RegisterForm
 
 APP_NAME = "TaskMaster"
@@ -182,8 +182,8 @@ def _sort_tasks(tasks):
             ordered.append(current)
             current = lookup.get(current.position_after)
 
-    for t in ordered:
-        print(t.code)
+    # for t in ordered:
+    #     print(t.code)
     if len(visited) != len(tasks):
         return tasks
     return ordered
@@ -191,15 +191,23 @@ def _sort_tasks(tasks):
 
 @app.route("/")
 def index():
+    print(request.args)
     context = {}
     tasks = Task.query.all()
+    boards = Board.query.all()
+    current_board = request.args.get("board")
+    context["current_board"] = current_board
     # for task in tasks:
     #     print(task, task.position_before, task.position_after)
     context["tasks"] = _sort_tasks(tasks)
     context["columns"] = [('backlog', 'Buglog'), ('in-progress', 'In Progress'), ('review', 'Review'), ('done', 'Done'), ('holy-shit', 'Holy Shit!')]
-    user_tasks = Task.query.filter(User.id==1).all()
-    print(user_tasks)
-    return render_template("index.html", context=context)
+    context["boards"] = boards
+    # user_tasks = Task.query.filter(User.id==1).all()
+    # print(user_tasks)
+
+    response = make_response(render_template("index.html", context=context))
+
+    return response
 
 
 @app.route("/kanban/")
@@ -258,7 +266,6 @@ def task_create():
     last_task = get_last_task()
     last_backlog_task = get_last_task_in("backlog")
     if form.validate_on_submit():
-        print("validates!")
         print(request.form)
         new_task = Task(
             name=request.form.get("name"),

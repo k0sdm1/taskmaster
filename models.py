@@ -61,5 +61,25 @@ class Task(db.Model):
         back_populates="tasks_working_on",
         foreign_keys=[assigned_to_id],
     )
+
     position_before: Mapped[str] = mapped_column(nullable=True)
     position_after: Mapped[str] = mapped_column(nullable=True)
+
+    board_id: Mapped[int | None] = mapped_column(
+       ForeignKey("boards.id"),
+       nullable=True,
+    )
+    board: Mapped["Board"] = relationship(
+        back_populates="tasks",
+        foreign_keys=[board_id],
+    )
+
+
+class Board(db.Model):
+    __tablename__ = "boards"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    tasks: Mapped[list["Task"]] = relationship(
+        back_populates="board",
+        foreign_keys="Task.board_id"
+    )

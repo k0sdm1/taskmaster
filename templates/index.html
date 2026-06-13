@@ -190,6 +190,11 @@
             margin: 5px 0;
         }
 
+        .upper-panel {
+            display: inline-flex;
+            gap: 20px;
+        }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -200,6 +205,15 @@
     <form action="/tasks/create/">
         <input type="submit" value="create task" />
     </form>
+    <label for="slct-current-board">select board</label>
+    <select name="current_board" id="slct-current-board">
+        <option value="" {% if not context.current_board %} selected {% endif %}>no board</option>
+        <option value="test" {% if context.current_board == 'test' %} selected {% endif %}>test</option>
+
+        {% for board in context.boards %}
+            <option value="{{ board.id }}" {% if context.current_board == board.name %} selected {% endif %}>{{ board.name }}</option>
+        {% endfor %}
+    </select>
 </div>
 <div class="kanban-board">
     <!-- Columns -->
@@ -408,6 +422,19 @@
         const baseUrl = "{{ url_for('task_detail', task_code='PLACEHOLDER') }}";
         const finalUrl = baseUrl.replace('PLACEHOLDER', task_code);
         window.open(finalUrl, '_blank');
+    }
+
+    const selectorCurrentBoard = document.getElementById("slct-current-board");
+    selectorCurrentBoard.addEventListener("change", select_current_board);
+
+    function select_current_board(event) {
+        const index_url = "{{ url_for('index') }}";
+        if (!event.target.value) {
+          window.location.href = index_url;
+          return;
+        }
+        const board_query = `${index_url}?board=${event.target.value}`;        
+        window.location.href = board_query;
     }
 
     document.addEventListener("DOMContentLoaded", updateCounts);
