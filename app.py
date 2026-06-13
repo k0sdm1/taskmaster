@@ -309,6 +309,24 @@ def update_server():
     }, 200
 
 
+@app.route("/api/v1/tasks/rebalance/")
+@admin_required
+def rebalance_tasks():
+    all_statuses = db.session.scalars(select(Task.status).order_by(Task.status).distinct()).all()
+    tasks = {}
+    for status in all_statuses:
+        qs = select(Task).where(Task.status == status).order_by(Task.position)
+        tasks_in_status = db.session.scalars(qs).all()
+
+        for idx, task in enumerate(tasks_in_status, start=1):
+            task.position = idx * 1000000
+
+        tasks[status] = [{"id": task.id, "name": task.name, "code": task.code, "position": task.position} for task in tasks_in_status]
+    print(tasks)
+    db.session.commit()
+    return {"all": tasks}, 200
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
