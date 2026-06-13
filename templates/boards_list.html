@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}boards{% endblock %}
+{% block head %}
+<style>
+    table, th, td {
+    border: 1px solid;
+    padding: 7px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<form action="/boards/create/">
+    <input type="submit" value="create board" />
+</form>
+<h2>all boards</h2>
+<table>
+    <thead>
+        <tr>
+            <td>id</td>
+            <td>name</td>
+            <td>edit</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for board in boards %}
+        <tr>
+            <td><a href="{{url_for('board_view.board_detail', board_id=board.id)}}">#{{ board.id }}</a></td>
+            <td>{{ board.name }}</td>
+            <td><a href="/boards/{{board.id}}/edit/">edit</a></td>
+        </tr>
+    {% endfor %}
+    {% if not boards %}
+        <tr>
+        <td>no</td>
+        <td>boards</td>
+        <td>yet</td>
+    </tr>
+    {% endif %}
+</tbody>
+</table>
+{% endblock %}

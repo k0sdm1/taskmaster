@@ -208,10 +208,9 @@
     <label for="slct-current-board">select board</label>
     <select name="current_board" id="slct-current-board">
         <option value="" {% if not context.current_board %} selected {% endif %}>no board</option>
-        <option value="test" {% if context.current_board == 'test' %} selected {% endif %}>test</option>
 
         {% for board in context.boards %}
-            <option value="{{ board.id }}" {% if context.current_board == board.name %} selected {% endif %}>{{ board.name }}</option>
+            <option value="{{ board.id }}" {% if context.current_board == board.id %} selected {% endif %}>{{ board.name }}</option>
         {% endfor %}
     </select>
 </div>
@@ -419,7 +418,7 @@
     }
 
     function openTaskDetail(task_code) {
-        const baseUrl = "{{ url_for('task_detail', task_code='PLACEHOLDER') }}";
+        const baseUrl = "{{ url_for('task_view.task_detail', task_code='PLACEHOLDER') }}";
         const finalUrl = baseUrl.replace('PLACEHOLDER', task_code);
         window.open(finalUrl, '_blank');
     }

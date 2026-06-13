@@ -64,6 +64,7 @@ class Task(db.Model):
 
     position_before: Mapped[str] = mapped_column(nullable=True)
     position_after: Mapped[str] = mapped_column(nullable=True)
+    position: Mapped[int] = mapped_column(nullable=True)
 
     board_id: Mapped[int | None] = mapped_column(
        ForeignKey("boards.id"),

@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired, Email
 class TaskForm(FlaskForm):
     name = StringField('name', validators=[DataRequired()])
     description = TextAreaField('description', validators=[DataRequired()])
-    board = SelectField("board", coerce=int)
+    board_id = SelectField("board", coerce=int)
 
 
 class TaskCreateForm(TaskForm):

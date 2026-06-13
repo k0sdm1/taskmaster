@@ -30,10 +30,10 @@
     </div>
 
     <div class="mb-3">
-        {{ form.board.label(class="form-label fw-semibold") }}
-        {{ form.board(class="form-control form-control-lg", placeholder="") }}
-        {% if form.board.errors %}
-            {% for error in form.board.errors %}
+        {{ form.board_id.label(class="form-label fw-semibold") }}
+        {{ form.board_id(class="form-control form-control-lg", placeholder="") }}
+        {% if form.board_id.errors %}
+            {% for error in form.board_id.errors %}
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         {% endif %}

@@ -1,18 +1,22 @@
 import logging
 
-import click
 from http import HTTPStatus
 from http.client import HTTPException
 
 from flask import Flask, redirect, request, flash, url_for, render_template, session, make_response
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+from flask_login import LoginManager, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy import select
 
 from decorators.user import admin_required
+from forms.boards import BoardCreateForm
 from forms.tasks import TaskCreateForm, TaskUpdateForm
 from models import Board, Task, User, db
 from forms.users import LoginForm, RegisterForm
+
+from boards import board_view
+from tasks import task_view
 
 APP_NAME = "TaskMaster"
 
@@ -27,68 +31,18 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskmaster.db"
 app.config['SECRET_KEY'] = "88005553535"
 db.init_app(app)
 
-@app.cli.command("set-admin")
-@click.argument("name")
-def set_user_admin(name):
-    user = User.query.filter(User.username == name).scalar()
-    if not user:
-        print("user not found")
-    user.is_superuser = True
-    user.is_admin = True
-    db.session.add(user)
-    db.session.commit()
-    print(f"{name} is now admin")
-
-migrate = Migrate(app, db)
+app.register_blueprint(board_view)
+app.register_blueprint(task_view)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-tasks = [
-    {
-        "id": 1,
-        "code": "TM-1",
-        "name": "task one",
-        "status": "in-progress",
-        "priority": 1,
-    },
-    {
-        "id": 2,
-        "code": "TM-002",
-        "name": "task two",
-        "status": "backlog",
-        "priority": 11,
-    },
-    {
-        "id": 3,
-        "code": "TM-003",
-        "name": "task three",
-        "status": "review",
-        "priority": 12,
-    },
-]
-
-
-def get_last_task():
-    return db.session.scalar(db.select(Task).order_by(Task.id.desc()))
-
-def get_last_task_in(column: str = "backlog") -> Task:
-    last_task = db.session.scalar(db.select(Task).where(Task.status == column, Task.position_after == None).order_by(Task.id.desc()))
-
-    print(last_task)
-    return last_task
-
-
-def get_new_task_code(last_task, code_designation="TM-"):
-    if not last_task:
-        return code_designation + "1"
-    return f"{code_designation}{last_task.id + 1}"
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+migrate = Migrate(app, db)
 
 @app.route("/admin/")
 @admin_required
@@ -102,8 +56,6 @@ def login():
     # handle this for us, and we use a custom LoginForm to validate.
     form = LoginForm()
     if form.validate_on_submit():
-        # Login and validate the user.
-        # user should be an instance of your `User` class
         user: User = None
         try:
             user = User.query.filter(User.username == request.form.get("username")).first()
@@ -156,14 +108,13 @@ def register():
 
 @app.route("/test/")
 def test_page():
-    print("tested!", get_last_task_in())
     return redirect(url_for("index"))
 
 
 def _sort_tasks(tasks):
     lookup = {t.code: t for t in tasks}
 
-    head = next(t for t in tasks if t.position_before is None)
+    # head = next(t for t in tasks if t.position_before is None)
     heads = [task for task in tasks if task.position_before is None]
 
     ordered = []
@@ -189,14 +140,27 @@ def _sort_tasks(tasks):
     return ordered
 
 
+def get_tasks(url_params: dict) -> list[Task]:
+    query = select(Task).order_by(Task.position)
+    board = url_params.get("board", None)
+    if board is not None and board:
+        print(board, type(board))
+        query = query.where(Task.board_id == int(board))
+    tasks = db.session.scalars(query).all()
+    print(tasks)
+    return tasks
+
+
 @app.route("/")
 def index():
     print(request.args)
     context = {}
-    tasks = Task.query.all()
+    tasks = get_tasks(request.args)
+    # tasks = Task.query.all()
     boards = Board.query.all()
     current_board = request.args.get("board")
-    context["current_board"] = current_board
+    context["current_board"] = int(current_board) if current_board is not None else ""
+    print(current_board)
     # for task in tasks:
     #     print(task, task.position_before, task.position_after)
     context["tasks"] = _sort_tasks(tasks)
@@ -235,55 +199,6 @@ def kanban_sortable():
     # print(user_tasks)
     return render_template("kanban-sortable.html", context=context)
 
-
-@app.route("/tasks/<string:task_code>/")
-def task_detail(task_code):
-    task = Task.query.filter(Task.code==task_code).scalar()
-    if not task:
-        return render_template("404.html")
-        return redirect(url_for("index"))
-    return render_template("task_detail.html", task=task)
-
-@app.route("/tasks/<string:task_code>/edit/", methods=['GET', 'POST'])
-def task_edit(task_code):
-    task = Task.query.filter(Task.code==task_code).scalar()
-    boards = Board.query.all()
-    if not task:
-        return render_template("404.html")
-    form = TaskUpdateForm(obj=task)
-    form.board.choices = [(board.id, board.name) for board in boards]
-    if form.validate_on_submit():
-        form.populate_obj(task)
-        db.session.commit()
-        return redirect(url_for("task_detail", task_code=task.code))
-
-    return render_template("task_edit.html", form=form, task=task, boards=boards)
-
-@app.route("/tasks/create/", methods=['GET', 'POST'])
-@login_required
-def task_create():
-    form = TaskCreateForm()
-    boards = Board.query.all()
-    form.board.choices = [(board.id, board.name) for board in boards]
-    # if request.method == "POST":
-    #     print(request.form)
-    last_task = get_last_task()
-    last_backlog_task = get_last_task_in("backlog")
-    if form.validate_on_submit():
-        print(request.form)
-        new_task = Task(
-            name=request.form.get("name"),
-            description=request.form.get("description"),
-            created_by_id=current_user.get_id(),
-            code=get_new_task_code(last_task=last_task),
-            position_before=last_backlog_task.code,
-        )
-        last_backlog_task.position_after = new_task.code
-        print("creating: ", new_task.code)
-        db.session.add(new_task)
-        db.session.commit()
-        return redirect(url_for("task_detail", task_code=new_task.code))
-    return render_template("task_create.html", form=form)
 
 @app.route("/api/v1/users/login/check-exist/", methods=["GET"])
 def api_check_username_exist():

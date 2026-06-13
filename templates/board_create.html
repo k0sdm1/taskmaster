@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}new board{% endblock %}
+
+
+{% block content %}
+    <form method="POST" action="">
+    {{ form.hidden_tag() }}
+    
+    <!-- Board name Field -->
+    <div class="mb-3">
+        {{ form.name.label(class="form-label fw-semibold") }}
+        {{ form.name(class="form-control form-control-lg", placeholder="give board a name", id="form-boardname-field") }}
+        {% if form.name.errors %}
+            {% for error in form.name.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+        <small class="text-danger" id="board-exists-alert"></small>
+    </div>
+    
+    <!-- Submit Button -->
+    <div class="d-grid">
+        {{ form.submit(class="btn btn-primary btn-lg rounded-pill shadow-sm") }}
+    </div>
+
+</form>
+    
+{% endblock %}

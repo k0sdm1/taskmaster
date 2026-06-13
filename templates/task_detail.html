@@ -5,15 +5,21 @@
 {% block content %}
 
   <div>
-    <a href="{{url_for('task_edit', task_code=task.code)}}">edit task</a>
+    <a href="{{url_for('task_view.task_edit', task_code=task.code)}}">edit task</a>
   </div>
 
   <div>
       <h1>
       Task #{{ task.code }}
     </h1>
+    <label for="">description:</label>
     <p>
       {{ task.description }}
+    </p>
+    
+    <p id="p-board">
+      <label for="p-board">board: </label> {% if task.board_id %}<a href="{{url_for('board_view.board_detail', board_id=task.board_id)}}">{{ task.board.name }}</a>{% else %}no board assigned{% endif %}
+      
     </p>
   </div>
 
