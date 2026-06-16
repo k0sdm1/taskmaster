@@ -10,7 +10,7 @@ from app import db
 task_view = Blueprint('task_view', __name__)
 
 
-def get_last_task():
+def get_last_task() -> Task:
     return db.session.scalar(db.select(Task).order_by(Task.id.desc()))
 
 
@@ -66,6 +66,7 @@ def task_create():
             created_by_id=current_user.get_id(),
             code=get_new_task_code(last_task=last_task),
             position_before=last_backlog_task.code,
+            position=last_backlog_task.position + 1_000_000 if last_backlog_task is not None else 1_000_000,
             board_id=request.form.get("board_id"),
         )
         last_backlog_task.position_after = new_task.code
