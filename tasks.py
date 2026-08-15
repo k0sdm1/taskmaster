@@ -51,7 +51,9 @@ def task_edit(task_code):
 @task_view.route("/tasks/create/", methods=['GET', 'POST'])
 @login_required
 def task_create():
-    form = TaskCreateForm()
+    current_board = request.args.get("current_board", 0)
+    print("current_board", current_board)
+    form = TaskCreateForm(board_id=current_board)
     boards = Board.query.all()
     form.board_id.choices = [(board.id, board.name) for board in boards]
     # if request.method == "POST":
@@ -74,4 +76,4 @@ def task_create():
         db.session.add(new_task)
         db.session.commit()
         return redirect(url_for("task_view.task_detail", task_code=new_task.code))
-    return render_template("task_create.html", form=form)
+    return render_template("task_create.html", form=form, current_board=current_board)

@@ -203,6 +203,9 @@
 {% block content %}
 <div class="upper-panel">
     <form action="/tasks/create/">
+        {% if context.current_board %}
+            <input type="hidden" name="current_board" value="{{ context.current_board }}">
+        {% endif %}
         <input type="submit" value="create task" />
     </form>
     <label for="slct-current-board">select board</label>
