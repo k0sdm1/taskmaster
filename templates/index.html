@@ -213,6 +213,9 @@
             <option value="{{ board.id }}" {% if context.current_board == board.id %} selected {% endif %}>{{ board.name }}</option>
         {% endfor %}
     </select>
+    <form action="/boards/">
+        <input type="submit" value="all boards"/>
+    </form>
 </div>
 <div class="kanban-board">
     <!-- Columns -->
